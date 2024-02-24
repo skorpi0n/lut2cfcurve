@@ -4,12 +4,6 @@ from pandas import *
 import sys, getopt, math, os.path, json, datetime
 import numpy as np
 
-#By changing window, we can lower the curve, similar to the percentage thing below
-
-#this can be used to create more points
-#df_lutThinned=df_lutOrg.rolling(window=10, min_periods=0, center=False, curveStep=7).mean()		#or .median()?
-
-
 def main(argv):
 	global filename
 	global resolution
