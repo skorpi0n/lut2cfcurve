@@ -24,7 +24,7 @@ def main(argv):
 		print('-f, --filename')
 		print('\tA file that contains a lookup table LUT consisting a single column of 256 rows')
 		print('\r\n-r, --resolution')
-		print('\tResolution for the curve. Must be one of: <2, 4, 6, 16, 18, 52 or 86>')
+		print('\tResolution for the curve. Must be one of: <2, 4, 8, 16, 32, 64, 128 or 256>')
 		print('\tThis is how detailed the curve should be')
 		print('\r\n-c, --curves')
 		print('\tNumber of extra curves to create <1-10>')
@@ -43,10 +43,10 @@ def main(argv):
 			filename = arg
 		elif opt in ("-r", "--resolution"):
 			arg = int(arg)
-			if arg >= 2 and arg <= 100:
+			if 256 % arg == 0:
 				resolution = arg
 			else:
-				print('Specified resolution ', arg, ' is not <3, 5, 9, 17, 33, 65 or 129>', sep='')
+				print('Specified resolution ', arg, ' is not <2, 4, 8, 16, 32, 64, 128 or 256>', sep='')
 				sys.exit()
 		elif opt in ("-c", "--curves"):
 			arg = int(arg)
@@ -77,7 +77,7 @@ def main(argv):
 		os.makedirs(targetDir)
 
 	if os.path.isfile(filename):
-		utcDateTime=datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat()
+		utcDateTime=datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat().replace("+00:00","Z")
 
 		print('Opening file: ' + filename)
 		basename = os.path.splitext(os.path.basename(filename))[0]
@@ -175,7 +175,7 @@ def main(argv):
 				'zeroThreshold':0,
 				'minimumDot':0,
 				'minimumDotSmoothLimit':0,
-				'keep0At0':'true',
+				'keep0At0':True,
 				'minimumSystem':False,
 				'hundredThreshold':1,
 				'maximumDot':1,
@@ -187,8 +187,49 @@ def main(argv):
 			jsonObj['modification'] = utcDateTime
 			targetFilename = basename + '_' + str(int(curve)) + '_i'+str(interpolation)+'.cfcurve'
 			with open(targetDir + '/' + targetFilename, 'w', encoding='utf-8') as f:
-				json.dump(jsonObj, f, ensure_ascii=False, indent='\t')
+#				json.dump(jsonObj, f, ensure_ascii=False, indent='\t', separators=(',', ':\t'))
+				jsonStr = json.dumps(jsonObj, ensure_ascii=False, indent='\t', separators=(',', ':\t'))
+				jsonStr = jsonStr.replace("True","true")
+				jsonStr = jsonStr.replace("False","false")
+				f.write(jsonStr)
+
+
+			print(",".join(str(element) for element in pointList))
+			
+			jsonStr='{\n\t"document_type":\t"application/vnd.nixps-curve+json",'
+			jsonStr+='\n\t"functions":\t[{'
+			jsonStr+='\n\t\t\t"name":\t"Default",'
+			jsonStr+='\n\t\t\t"points":\t['+', '.join(str(element) for element in pointList)+']'
+			jsonStr+='\n\t\t\t"direct":\ttrue,'
+			jsonStr+='\n\t\t\t"zeroThreshold":\t0,'
+			jsonStr+='\n\t\t\t"minimumDot":\t0,'
+			jsonStr+='\n\t\t\t"minimumDotSmoothLimit":\t0,'
+			jsonStr+='\n\t\t\t"keep0At0":\ttrue,'
+			jsonStr+='\n\t\t\t"minimumSystem":\tfalse,'
+			jsonStr+='\n\t\t\t"hundredThreshold":\t1,'
+			jsonStr+='\n\t\t\t"maximumDot":\t1,'
+			jsonStr+='\n\t\t\t"maximumDotSmoothLimit":\t1,'
+			jsonStr+='\n\t\t\t"keep100At100":\tfrue,'
+			jsonStr+='\n\t\t\t"maximumSystem":\tfalse'
+			jsonStr+='\n\t\t}],'
+			jsonStr+='\n\t"birth":\t"'+utcDateTime+'",'
+			jsonStr+='\n\t"modification":\t"'+utcDateTime+'"'
+			jsonStr+='\n}'
+			with open(targetDir + '/__' + targetFilename, 'w', encoding='utf-8') as f:
+				f.write(jsonStr)
+
+
+			print(jsonStr)
+
+
+#			options = jsbeautifier.default_options()
+#			options.indent_size = 2
+#			print(jsbeautifier.beautify(json.dumps(jsonObj), options))
+
 			jsonData = json.loads(json.dumps(jsonObj))
+
+			#jsonData = jsonData.replace("{","{\n")
+
 			print('\r\nOutput cfcurve to: '+ targetDir + '/' + targetFilename, sep='')
 
 			if curve <= (curveStep*i):
