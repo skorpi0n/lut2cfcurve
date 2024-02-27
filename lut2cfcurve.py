@@ -190,7 +190,12 @@ def main(argv):
 			}]
 			jsonObj['birth'] = utcDateTime
 			jsonObj['modification'] = utcDateTime
-			targetFilename = basename + '_' + str(int(curve)) + '_i'+str(interpolation)+'.cfcurve'
+
+			if interpolation == 0:
+				targetFilename = basename + '_' + str(int(curve)) + '.cfcurve'
+			else:
+				targetFilename = basename + '_' + str(int(curve)) + '_i'+str(interpolation)+'.cfcurve'
+
 			with open(targetDir + '/' + targetFilename, 'w', encoding='utf-8') as f:
 #				json.dump(jsonObj, f, ensure_ascii=False, indent='\t', separators=(',', ':\t'))
 				jsonStr = json.dumps(jsonObj, ensure_ascii=False, indent='\t', separators=(',', ':\t'))
