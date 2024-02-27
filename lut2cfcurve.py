@@ -137,7 +137,6 @@ def main(argv):
 			scaled100ColName='Org #'+str(i)+', r='+str(resolution)+', c='+str(curves)+', s='+str(curveStep)
 
 			if interpolation > 0:
-				print('noooo')
 				straightenedColName='Interpolated #'+str(i)+', r='+str(resolution)+', c='+str(curves)+', s='+str(curveStep)+', i='+str(interpolation)
 
 			#Copy values from Thinned and Linear columns to new columns to be worked with
@@ -149,7 +148,6 @@ def main(argv):
 			for index, row in df_lutScaled100.iterrows():
 				#Scale to 100
 				df_lutScaled100.loc[index,linearColName] = math.ceil((row[linearColName]/(df_lutOrgLength/(100-(curveStep*i)))))
-#				df_lutScaled100.loc[index,scaled100ColName] = math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i)))))
 				df_lutScaled100.loc[index,scaled100ColName] = math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i*(df_lutOrgLength/df_lutOrgMaxVal))))))
 
 				if interpolation > 0:
@@ -167,7 +165,6 @@ def main(argv):
 			print('\r\nLUT scaled to 0-100 (' + str(df_lutScaled100Length) + ' points) with max '+ str(curve) + '%')
 			print(df_lutScaled100)
 			#df_lutThinned.plot(color='#00FF00', ax=ax, figsize=(6, 6))
-		
 		
 			#Build json for making a cfcurve (CloudFlowCurve)
 			print('\r\nBuild a json for making a cfcurve (CloudFlowCurve) at max ' + str(curve) + '%')
