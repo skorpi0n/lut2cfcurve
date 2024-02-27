@@ -18,7 +18,7 @@ def main(argv):
 		sys.exit(1)
 
 	if not opts or len(opts) != 5:
-		print('Missing arguments! ')
+		print('Missing arguments!  ')
 		print('Usage:')
 		print('lut2cfcurve.py -f <filename.lut> -r <2-100> -c <1-10> -s <1-100> -i <0-100>')
 		print('-f, --filename')
