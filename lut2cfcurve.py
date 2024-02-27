@@ -18,7 +18,7 @@ def main(argv):
 		sys.exit(1)
 
 	if not opts or len(opts) != 5:
-		print('Missing arguments!  ')
+		print('Missing arguments!')
 		print('Usage:')
 		print('lut2cfcurve.py -f <filename.lut> -r <2-100> -c <1-10> -s <1-100> -i <0-100>')
 		print('-f, --filename')
@@ -135,7 +135,10 @@ def main(argv):
 			#Define column namnes
 			linearColName='Linear #'+str(i)
 			scaled100ColName='Org #'+str(i)+', r='+str(resolution)+', c='+str(curves)+', s='+str(curveStep)
-			straightenedColName='Interpolated #'+str(i)+', r='+str(resolution)+', c='+str(curves)+', s='+str(curveStep)+', i='+str(interpolation)
+
+			if interpolation > 0:
+				print('noooo')
+				straightenedColName='Interpolated #'+str(i)+', r='+str(resolution)+', c='+str(curves)+', s='+str(curveStep)+', i='+str(interpolation)
 
 			#Copy values from Thinned and Linear columns to new columns to be worked with
 			df_lutScaled100[linearColName] = df_lutThinned['Linear'].values
@@ -146,10 +149,12 @@ def main(argv):
 			for index, row in df_lutScaled100.iterrows():
 				#Scale to 100
 				df_lutScaled100.loc[index,linearColName] = math.ceil((row[linearColName]/(df_lutOrgLength/(100-(curveStep*i)))))
-				df_lutScaled100.loc[index,scaled100ColName] = math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i)))))
+#				df_lutScaled100.loc[index,scaled100ColName] = math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i)))))
+				df_lutScaled100.loc[index,scaled100ColName] = math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i*(df_lutOrgLength/df_lutOrgMaxVal))))))
 
-				#Interpolate between Linear and orginal curve to be able to striaghten curve
-				df_lutScaled100[straightenedColName]=df_lutScaled100[scaled100ColName] * (1 - (interpolation/100)) + df_lutScaled100[linearColName] * (interpolation/100)
+				if interpolation > 0:
+					#Interpolate between Linear and orginal curve to be able to striaghten curve
+					df_lutScaled100[straightenedColName]=df_lutScaled100[scaled100ColName] * (1 - (interpolation/100)) + df_lutScaled100[linearColName] * (interpolation/100)
 
 				#Append coordinates to list for inserting into jsonObj
 				pointList.append([row.iloc[0], math.ceil((row[scaled100ColName]/(df_lutOrgLength/(100-(curveStep*i)))))])
@@ -193,43 +198,6 @@ def main(argv):
 				jsonStr = jsonStr.replace("False","false")
 				f.write(jsonStr)
 
-
-			print(",".join(str(element) for element in pointList))
-			
-			jsonStr='{\n\t"document_type":\t"application/vnd.nixps-curve+json",'
-			jsonStr+='\n\t"functions":\t[{'
-			jsonStr+='\n\t\t\t"name":\t"Default",'
-			jsonStr+='\n\t\t\t"points":\t['+', '.join(str(element) for element in pointList)+'],'
-			jsonStr+='\n\t\t\t"direct":\ttrue,'
-			jsonStr+='\n\t\t\t"zeroThreshold":\t0,'
-			jsonStr+='\n\t\t\t"minimumDot":\t0,'
-			jsonStr+='\n\t\t\t"minimumDotSmoothLimit":\t0,'
-			jsonStr+='\n\t\t\t"keep0At0":\ttrue,'
-			jsonStr+='\n\t\t\t"minimumSystem":\tfalse,'
-			jsonStr+='\n\t\t\t"hundredThreshold":\t1,'
-			jsonStr+='\n\t\t\t"maximumDot":\t1,'
-			jsonStr+='\n\t\t\t"maximumDotSmoothLimit":\t1,'
-			jsonStr+='\n\t\t\t"keep100At100":\ttrue,'
-			jsonStr+='\n\t\t\t"maximumSystem":\tfalse'
-			jsonStr+='\n\t\t}],'
-			jsonStr+='\n\t"birth":\t"'+utcDateTime+'",'
-			jsonStr+='\n\t"modification":\t"'+utcDateTime+'"'
-			jsonStr+='\n}'
-			with open(targetDir + '/__' + targetFilename, 'w', encoding='utf-8') as f:
-				f.write(jsonStr)
-
-
-			print(jsonStr)
-
-
-#			options = jsbeautifier.default_options()
-#			options.indent_size = 2
-#			print(jsbeautifier.beautify(json.dumps(jsonObj), options))
-
-			jsonData = json.loads(json.dumps(jsonObj))
-
-			#jsonData = jsonData.replace("{","{\n")
-
 			print('\r\nOutput cfcurve to: '+ targetDir + '/' + targetFilename, sep='')
 
 			if curve <= (curveStep*i):
@@ -249,9 +217,6 @@ def main(argv):
 
 	else:
 		print('Specified file \''+ filename +'\' is not a file')
-
-	
-	
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
